@@ -703,11 +703,9 @@
 
     // Debug logging
     function debug(msg) {
-      console.log(msg);
-      const panel = document.getElementById('debugPanel');
-      panel.innerHTML += msg + '<br>';
-      panel.classList.add('show');
-    }
+  // Debug logging disabled
+  // To enable, uncomment: console.log(msg);
+}
 
     document.addEventListener('DOMContentLoaded', () => {
       debug('Page loaded, connecting...');
@@ -761,69 +759,61 @@
     }
 
     async function loadAllData() {
-      const url = WEB_APP_URL + '?action=data&nocache=' + Date.now();
-      debug('Fetching: ' + url);
+  return new Promise((resolve, reject) => {
+    const callbackName = 'dataCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(result) {
+      delete window[callbackName];
+      document.head.removeChild(script);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-      
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        
-        clearTimeout(timeoutId);
-        debug('Response status: ' + response.status);
-        
-        if (!response.ok) {
-          throw new Error('HTTP ' + response.status + ': ' + response.statusText);
-        }
-        
-        const result = await response.json();
-        debug('Response received, success: ' + result.success);
-        
-        if (!result.success) {
-          throw new Error(result.error || 'Unknown error from server');
-        }
-        
-        if (!result.data || !Array.isArray(result.data)) {
-          throw new Error('Invalid data format received');
-        }
-        
-        allData = result.data.filter(row => 
-          (row.artno && row.artno.trim() !== '') || 
-          (row.artGen && row.artGen.trim() !== '')
-        );
-        
-        debug('Filtered to ' + allData.length + ' valid rows');
-        
-        // Create unique key for each row to distinguish variants
-        allData.forEach(item => {
-          item._uniqueKey = (item.artno + '|' + item.color + '|' + item.gender).toLowerCase();
-        });
-        
-        // Calculate days pending for each item
-        allData.forEach(item => {
-          item.daysPending = calculateDaysPending(item.studioCompletion || item.date);
-          item.issueType = determineIssueType(item);
-        });
-        
-        updateStats();
-        performSearch();
-        if (currentView === 'analytics') updateAnalyticsView();
-        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
-        
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          throw new Error('Request timeout - data too large or connection slow');
-        }
-        throw error;
+      if (!result.success) {
+        reject(new Error(result.error || 'Failed to load data'));
+        return;
       }
-    }
+      
+      if (!result.data || !Array.isArray(result.data)) {
+        reject(new Error('Invalid data format received'));
+        return;
+      }
+      
+      allData = result.data.filter(row => 
+        (row.artno && row.artno.trim() !== '') || 
+        (row.artGen && row.artGen.trim() !== '')
+      );
+      
+      allData.forEach(item => {
+        item._uniqueKey = (item.artno + '|' + item.color + '|' + item.gender).toLowerCase();
+        item.daysPending = calculateDaysPending(item.studioCompletion || item.date);
+        item.issueType = determineIssueType(item);
+      });
+      
+      updateStats();
+      performSearch();
+      if (currentView === 'analytics') updateAnalyticsView();
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+      
+      resolve(result);
+    };
+    
+    script.src = WEB_APP_URL + '?action=data&callback=' + callbackName + '&nocache=' + Date.now();
+    script.onerror = () => {
+      delete window[callbackName];
+      document.head.removeChild(script);
+      reject(new Error('Failed to load data'));
+    };
+    
+    document.head.appendChild(script);
+    
+    setTimeout(() => {
+      if (window[callbackName]) {
+        delete window[callbackName];
+        if (script.parentNode) document.head.removeChild(script);
+        reject(new Error('Request timeout'));
+      }
+    }, 30000);
+  });
+}
 
     function calculateDaysPending(dateString) {
       if (!dateString) return 0;
@@ -1481,22 +1471,45 @@
     }
 
     async function submitTaskToSheet(taskData) {
-      try {
-        const url = WEB_APP_URL + '?action=createTask&data=' + encodeURIComponent(JSON.stringify(taskData));
-        const response = await fetch(url);
-        const result = await response.json();
-
-        if (result.success) {
-          showToast('Task created successfully!', 'success');
-          closeTaskCreator();
-          refreshData();
-        } else {
-          throw new Error(result.error || 'Failed to create task');
-        }
-      } catch (err) {
-        showToast('Error: ' + err.message, 'error');
+  return new Promise((resolve, reject) => {
+    const callbackName = 'createTaskCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    // Create global callback
+    window[callbackName] = function(result) {
+      delete window[callbackName];
+      if (script.parentNode) document.head.removeChild(script);
+      
+      if (result && result.success) {
+        resolve(result);
+      } else {
+        reject(new Error(result?.error || 'Failed to create task'));
       }
-    }
+    };
+    
+    // Build URL with encoded data - IMPORTANT: Use GET with JSONP
+    const encodedData = encodeURIComponent(JSON.stringify(taskData));
+    const url = `${WEB_APP_URL}?action=createTask&data=${encodedData}&callback=${callbackName}&nocache=${Date.now()}`;
+    
+    script.src = url;
+    script.onerror = () => {
+      delete window[callbackName];
+      if (script.parentNode) document.head.removeChild(script);
+      reject(new Error('Network error - failed to submit task'));
+    };
+    
+    document.head.appendChild(script);
+    
+    // Timeout after 15 seconds
+    setTimeout(() => {
+      if (window[callbackName]) {
+        delete window[callbackName];
+        if (script.parentNode) document.head.removeChild(script);
+        reject(new Error('Request timeout - task may have been created, please check sheet'));
+      }
+    }, 15000);
+  });
+}
 
     function downloadBulkTemplate() {
       const headers = ['Date', 'Person', 'Category', 'Art-Gen', 'Artno', 'Gender', 'Sub-Category', 'Color Code', 'Color', 'Size', 'Brand', 'MRP', 'File Name', 'Features'];
@@ -1577,51 +1590,54 @@
       previewDiv.style.display = 'block';
     }
 
-    async function submitBulkTasks() {
-      if (bulkTaskData.length === 0) {
-        showToast('No data to upload', 'error');
-        return;
-      }
+   async function submitBulkTasks() {
+  if (bulkTaskData.length === 0) {
+    showToast('No data to upload', 'error');
+    return;
+  }
 
-      let successCount = 0;
-      let errorCount = 0;
+  let successCount = 0;
+  let errorCount = 0;
+  
+  // Process one by one to avoid overwhelming the server
+  for (const row of bulkTaskData) {
+    try {
+      const taskData = {
+        date: row.date || new Date().toISOString().split('T')[0],
+        person: row.person || row.yourname || '',
+        category: row.category || '',
+        artGen: row.artgen || row['art-gen'] || '',
+        artno: row.artno || '',
+        gender: row.gender || '',
+        subCategory: row.subcategory || row['sub-category'] || '',
+        colorCode: row.colorcode || row['colorcode'] || '',
+        color: row.color || '',
+        size: row.size || '',
+        brand: row.brand || '',
+        mrp: row.mrp || '',
+        fileName: row.filename || row['file name'] || '',
+        features: row.features || ''
+      };
 
-      for (const row of bulkTaskData) {
-        try {
-          const taskData = {
-            date: row.date || new Date().toISOString().split('T')[0],
-            person: row.person || row.yourname || '',
-            category: row.category || '',
-            artGen: row.artgen || row['art-gen'] || '',
-            artno: row.artno || '',
-            gender: row.gender || '',
-            subCategory: row.subcategory || row['sub-category'] || '',
-            colorCode: row.colorcode || '',
-            color: row.color || '',
-            size: row.size || '',
-            brand: row.brand || '',
-            mrp: row.mrp || '',
-            fileName: row.filename || row['file name'] || '',
-            features: row.features || ''
-          };
-
-          const url = WEB_APP_URL + '?action=createTask&data=' + encodeURIComponent(JSON.stringify(taskData));
-          const response = await fetch(url);
-          const result = await response.json();
-
-          if (result.success) successCount++;
-          else errorCount++;
-        } catch (err) {
-          errorCount++;
-        }
-      }
-
-      showToast('Bulk upload complete: ' + successCount + ' success, ' + errorCount + ' failed', successCount > 0 ? 'success' : 'error');
-      if (successCount > 0) {
-        closeTaskCreator();
-        refreshData();
-      }
+      await submitTaskToSheet(taskData);
+      successCount++;
+      
+      // Small delay to avoid rate limiting
+      await new Promise(r => setTimeout(r, 100));
+      
+    } catch (err) {
+      console.error('Failed to create task:', err);
+      errorCount++;
     }
+  }
+
+  showToast(`Bulk upload complete: ${successCount} success, ${errorCount} failed`, successCount > 0 ? 'success' : 'error');
+  
+  if (successCount > 0) {
+    closeTaskCreator();
+    refreshData();
+  }
+}
   </script>
 
   <!-- Task Creator Modal -->
