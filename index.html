@@ -250,19 +250,108 @@
     }
     
     .selection-bar {
-      background: var(--primary-light); padding: 12px 20px;
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px solid var(--gray-200);
-    }
+  background: var(--primary-light);
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--gray-200);
+}
+/* Table Wrapper */
+.table-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 600px;
+  position: relative;
+}
+/* Data Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  table-layout: auto;
+}
+
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.data-table th {
+  background: var(--gray-50);
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--gray-600);
+  font-size: 11px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.data-table th:hover {
+  background: var(--gray-100);
+}
+
+.data-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+
+.data-table tr:hover {
+  background: var(--gray-50);
+}
+
+.data-table tr.selected {
+  background: var(--primary-light) !important;
+}
+
     .selection-info { font-size: 14px; color: var(--primary-dark); font-weight: 600; }
     
     .table-section {
-      background: white; border-radius: 12px; box-shadow: var(--shadow); overflow: hidden;
-    }
-    .table-header {
-      padding: 20px; border-bottom: 1px solid var(--gray-200);
-      display: flex; justify-content: space-between; align-items: center;
-    }
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+   .table-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.table-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.table-header-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--gray-900);
+}
+
+.table-header-subtitle {
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.export-options {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
     .export-options { display: flex; gap: 8px; }
     .table-wrapper { overflow-x: auto; max-height: 600px; overflow-y: auto; }
     .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -276,10 +365,17 @@
     .data-table tr:hover { background: var(--gray-50); }
     .data-table tr.selected { background: var(--primary-light) !important; }
     
-    .checkbox-col { width: 40px; text-align: center; }
-    .row-checkbox {
-      width: 18px; height: 18px; cursor: pointer;
-    }
+    .checkbox-col {
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.row-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
     
     .cell-artno { 
       font-weight: 800; 
@@ -324,10 +420,15 @@
     .action-btn.urgent:hover { background: var(--danger); color: white; }
     
     .table-footer {
-      padding: 16px; border-top: 1px solid var(--gray-200);
-      display: flex; justify-content: space-between; align-items: center;
-      background: var(--gray-50);
-    }
+  padding: 16px 24px;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--gray-50);
+  position: sticky;
+  bottom: 0;
+}
     .page-btn {
       padding: 8px 12px; border: 1px solid var(--gray-200);
       background: white; border-radius: 6px; cursor: pointer; margin: 0 2px;
@@ -513,60 +614,74 @@
       </div>
 
       <div class="table-section">
-        <div class="table-header">
-          <div>
-            <div style="font-weight:700;">Task Details</div>
-            <div style="font-size:13px;color:var(--gray-600);" id="tableSubtitle">Loading...</div>
-          </div>
-          <div class="export-options">
-            <button class="btn btn-secondary" onclick="exportCSV('all')" id="btnExportAll">
-               Export All
-            </button>
-            <button class="btn btn-success" onclick="exportCSV('selected')" id="btnExportSelected" style="display:none;">
-               Export Selected (<span id="selectedCount">0</span>)
-            </button>
-          </div>
-        </div>
-        
-        <div class="selection-bar" id="selectionBar" style="display:none;">
-          <div class="selection-info">
-            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="margin-right:8px;">
-            Select All
-          </div>
-          <button class="clear-all" onclick="clearSelection()">Clear Selection</button>
-        </div>
-        
-        <div class="table-wrapper" id="tableWrapper">
-          <div class="empty-state" id="emptyState">
-            <div class="loading"></div>
-            <h3 style="margin-top:16px;">Loading data from "Data" tab...</h3>
-            <p id="loadingDetails" style="font-size: 12px; color: var(--gray-400); margin-top: 8px;"></p>
-          </div>
-          <table class="data-table" id="dataTable" style="display:none;">
-            <thead>
-              <tr>
-                <th class="checkbox-col"><input type="checkbox" id="headerCheckbox" onchange="toggleSelectAll()"></th>
-                <th onclick="sortTable('artno')">Artno ↕</th>
-                <th onclick="sortTable('color')">Color ↕</th>
-                <th onclick="sortTable('gender')">Gender ↕</th>
-                <th onclick="sortTable('studioStatus')">Studio Status ↕</th>
-                <th onclick="sortTable('designer')">Designer ↕</th>
-                <th onclick="sortTable('designerStatus')">Designer Status ↕</th>
-                <th onclick="sortTable('pmtStatus')">PMT Status ↕</th>
-                <th onclick="sortTable('studioCompletion')">Date (Studio Completion) ↕</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-          </table>
-        </div>
-        
-        <div class="table-footer" id="tableFooter" style="display:none;">
-          <span id="paginationInfo"></span>
-          <div id="paginationControls"></div>
-        </div>
-      </div>
+  <!-- Table Header - Stays at top -->
+  <div class="table-header">
+    <div class="table-header-left">
+      <div class="table-header-title">Task Details</div>
+      <div class="table-header-subtitle" id="tableSubtitle">Loading...</div>
     </div>
+    <div class="export-options">
+      <button class="btn btn-secondary" onclick="exportCSV('all')" id="btnExportAll">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export
+      </button>
+      <button class="btn btn-success" onclick="exportCSV('selected')" id="btnExportSelected" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export Selected (<span id="selectedCount">0</span>)
+      </button>
+    </div>
+  </div>
+
+  <!-- Selection Bar -->
+  <div class="selection-bar" id="selectionBar" style="display:none;">
+    <div class="selection-info">
+      <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="margin-right:8px;">
+      Select All
+    </div>
+    <button class="clear-all" onclick="clearSelection()">Clear Selection</button>
+  </div>
+
+  <!-- Table Content -->
+  <div class="table-wrapper" id="tableWrapper">
+    <div class="empty-state" id="emptyState">
+      <div class="loading"></div>
+      <h3 style="margin-top:16px;">Loading data from "Data" tab...</h3>
+      <p id="loadingDetails" style="font-size: 12px; color: var(--gray-400); margin-top: 8px;"></p>
+    </div>
+    
+    <table class="data-table" id="dataTable" style="display:none;">
+      <thead>
+        <tr>
+          <th class="checkbox-col"><input type="checkbox" id="headerCheckbox" onchange="toggleSelectAll()"></th>
+          <th onclick="sortTable('artno')">Artno ↕</th>
+          <th onclick="sortTable('color')">Color ↕</th>
+          <th onclick="sortTable('gender')">Gender ↕</th>
+          <th onclick="sortTable('studioStatus')">Studio Status ↕</th>
+          <th onclick="sortTable('designer')">Designer ↕</th>
+          <th onclick="sortTable('designerStatus')">Designer Status ↕</th>
+          <th onclick="sortTable('pmtStatus')">PMT Status ↕</th>
+          <th onclick="sortTable('studioCompletion')">Date ↕</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Table Footer - Stays at bottom -->
+  <div class="table-footer" id="tableFooter" style="display:none;">
+    <span id="paginationInfo"></span>
+    <div id="paginationControls"></div>
+  </div>
+</div>
 
     <!-- ANALYTICS VIEW -->
     <div id="analyticsView" class="hidden">
@@ -686,9 +801,10 @@
     let missingKeys = [];
     let currentView = 'main';
     let analyticsFilter = { status: 'all', category: null };
+    let bulkTaskData = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-      connect();
+      connect(); // FIXED: This was calling the wrong function
     });
 
     function switchView(view) {
@@ -1163,81 +1279,79 @@
     }
 
     function renderTable() {
-      const tbody = document.getElementById('tableBody');
-      const emptyState = document.getElementById('emptyState');
-      const dataTable = document.getElementById('dataTable');
-      const tableFooter = document.getElementById('tableFooter');
-      
-      if (filteredData.length === 0) {
-        emptyState.innerHTML = '<h3>No tasks found</h3><p>Try different search terms</p>';
-        emptyState.style.display = 'block';
-        dataTable.style.display = 'none';
-        tableFooter.style.display = 'none';
-        return;
-      }
-      
-      emptyState.style.display = 'none';
-      dataTable.style.display = 'table';
-      tableFooter.style.display = 'flex';
-      
-      const totalItems = filteredData.length;
-      const start = (currentPage - 1) * itemsPerPage;
-      const pageItems = filteredData.slice(start, start + itemsPerPage);
-      
-      let html = '';
-      pageItems.forEach(item => {
-        const isSelected = selectedRows.has(item._rowIndex);
-        const status = (item.designerStatus || 'unknown').toLowerCase();
-        
-        html += `<tr class="${isSelected ? 'selected' : ''}">
-          <td class="checkbox-col">
-            <input type="checkbox" class="row-checkbox" 
-                   data-row-index="${item._rowIndex}"
-                   ${isSelected ? 'checked' : ''}
-                   onchange="toggleRowSelection(${item._rowIndex})">
-          </td>
-          <td>
-            <span class="cell-artno">${item.artno || '-'}</span>
-            ${item.artGen ? `<br><span class="cell-artgen">${item.artGen}</span>` : ''}
-          </td>
-          <td>${item.color || '-'}</td>
-         <td>${item.gender || '-'}</td>
-          <td><span class="status-badge ${(item.studioStatus || 'unknown').toLowerCase()}">${item.studioStatus || 'Unknown'}</span></td>
-          <td>${item.designer || '-'}</td>
-          <td><span class="status-badge ${status}">${item.designerStatus || 'Unknown'}</span></td>
-          <td>${item.pmtStatus || '-'}</td>
-          <td>${item.studioCompletion || '-'}</td>
-          <td>
-            <div class="action-btns">
-              <button class="action-btn view" onclick="viewDetails('${item.artno}', '${item.color}', '${item.gender}')" title="View Details">👁</button>
-              <button class="action-btn urgent" onclick="markAsUrgent(${item._rowIndex}, '${item.artno}')" title="Mark Urgent">🔥</button>
-            </div>
-          </td>
-        </tr>`;
-      });
-      
-      tbody.innerHTML = html;
-      
-      document.getElementById('paginationInfo').textContent = 
-        `Showing ${start + 1}-${Math.min(start + itemsPerPage, totalItems)} of ${totalItems} tasks`;
-      
-      const totalPages = Math.ceil(totalItems / itemsPerPage);
-      let paginationHtml = `<button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
-      
-      for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
-        paginationHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
-      }
-      
-      paginationHtml += `<button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
-      document.getElementById('paginationControls').innerHTML = paginationHtml;
-      document.getElementById('tableSubtitle').textContent = `${totalItems} tasks from "Data" tab`;
-    }
-
-    function changePage(page) {
-      currentPage = page;
-      renderTable();
-      document.getElementById('tableWrapper').scrollTop = 0;
-    }
+  const tbody = document.getElementById('tableBody');
+  const emptyState = document.getElementById('emptyState');
+  const dataTable = document.getElementById('dataTable');
+  const tableFooter = document.getElementById('tableFooter');
+  const tableSubtitle = document.getElementById('tableSubtitle');
+  
+  if (filteredData.length === 0) {
+    emptyState.innerHTML = '<h3>No tasks found</h3><p>Try different search terms</p>';
+    emptyState.style.display = 'block';
+    dataTable.style.display = 'none';
+    tableFooter.style.display = 'none';
+    if (tableSubtitle) tableSubtitle.textContent = '0 tasks';
+    return;
+  }
+  
+  emptyState.style.display = 'none';
+  dataTable.style.display = 'table';
+  tableFooter.style.display = 'flex';
+  
+  const totalItems = filteredData.length;
+  const start = (currentPage - 1) * itemsPerPage;
+  const pageItems = filteredData.slice(start, start + itemsPerPage);
+  
+  let html = '';
+  pageItems.forEach(item => {
+    const isSelected = selectedRows.has(item._rowIndex);
+    const status = (item.designerStatus || 'unknown').toLowerCase();
+    
+    html += `<tr class="${isSelected ? 'selected' : ''}">
+      <td class="checkbox-col">
+        <input type="checkbox" class="row-checkbox" 
+               data-row-index="${item._rowIndex}"
+               ${isSelected ? 'checked' : ''}
+               onchange="toggleRowSelection(${item._rowIndex})">
+      </td>
+      <td>
+        <span class="cell-artno">${item.artno || '-'}</span>
+        ${item.artGen ? `<br><span class="cell-artgen">${item.artGen}</span>` : ''}
+      </td>
+      <td>${item.color || '-'}</td>
+      <td>${item.gender || '-'}</td>
+      <td><span class="status-badge ${(item.studioStatus || 'unknown').toLowerCase()}">${item.studioStatus || 'Unknown'}</span></td>
+      <td>${item.designer || '-'}</td>
+      <td><span class="status-badge ${status}">${item.designerStatus || 'Unknown'}</span></td>
+      <td>${item.pmtStatus || '-'}</td>
+      <td>${item.studioCompletion || '-'}</td>
+      <td>
+        <div class="action-btns">
+          <button class="action-btn view" onclick="viewDetails('${item.artno}', '${item.color}', '${item.gender}')" title="View Details">👁</button>
+          <button class="action-btn urgent" onclick="markAsUrgent(${item._rowIndex}, '${item.artno}')" title="Mark Urgent">🔥</button>
+        </div>
+      </td>
+    </tr>`;
+  });
+  
+  tbody.innerHTML = html;
+  
+  document.getElementById('paginationInfo').textContent = 
+    `Showing ${start + 1}-${Math.min(start + itemsPerPage, totalItems)} of ${totalItems} tasks`;
+  
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  let paginationHtml = `<button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
+  
+  for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+    paginationHtml += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+  }
+  
+  paginationHtml += `<button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>›</button>`;
+  document.getElementById('paginationControls').innerHTML = paginationHtml;
+  
+  // Update subtitle
+  if (tableSubtitle) tableSubtitle.textContent = `${totalItems} tasks from "Data" tab`;
+}
 
     function viewDetails(artno, color, gender) {
       if (!artno) {
@@ -1359,76 +1473,68 @@
       }
     }
 
-    function exportCSV(type) {
-      let dataToExport = [];
-      
-      if (type === 'selected') {
-        if (selectedRows.size === 0) {
-          showToast('No items selected', 'error');
-          return;
-        }
-        dataToExport = allData.filter(item => selectedRows.has(item._rowIndex));
-      } else {
-        dataToExport = filteredData.length > 0 ? filteredData : allData;
-      }
-      
-      if (!dataToExport.length) {
-        showToast('No data to export', 'error');
-        return;
-      }
-      
-      const headers = [
-        'Date', 'Person', 'Category', 'Art-Gen', 'Artno', 'Gender', 'Sub-Category',
-        'Color Code', 'Color', 'Size', 'Brand', 'MRP', 'File Name', 'Features',
-        'Studio Completion', 'Studio Status', 'Assigned Date', 'Designer',
-        'Designer Status', 'Approver Remarks', 'PMT Status', 'Design Completion',
-        'Sync Status', 'Days Pending', 'Issue Type', 'Remarks'
-      ];
-      
-      const rows = dataToExport.map(t => [
-        t.date, t.person, t.category, t.artGen, t.artno, t.gender, t.subCategory,
-        t.colorCode, t.color, t.size, t.brand, t.mrp, t.fileName, t.features,
-        t.studioCompletion, t.studioStatus, t.assignedDate, t.designer,
-        t.designerStatus, t.approverRemarks, t.pmtStatus, t.designCompletion,
-        t.syncStatus, t.daysPending, t.issueType, t.remarks
-      ]);
-      
-      const csv = [headers.join(','), ...rows.map(r => 
-        r.map(f => `"${(f || '').toString().replace(/"/g, '""')}"`).join(',')
-      )].join('\n');
-      
-      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${type}_tasks_${new Date().toISOString().slice(0,10)}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      showToast(`Exported ${dataToExport.length} tasks with all columns!`, 'success');
-    }
-
     async function refreshData() {
       selectedRows.clear();
       await loadAllData();
       showToast('Data refreshed!', 'success');
     }
-  
-    // Task Creator Functions
-    let bulkTaskData = [];
+
+    // ============================================
+    // TASK CREATOR FUNCTIONS
+    // ============================================
 
     function openTaskCreator() {
-      document.getElementById('taskDate').valueAsDate = new Date();
       document.getElementById('taskCreatorModal').classList.add('active');
+      resetTaskCreator();
+    }
+
+    function resetTaskCreator() {
+      document.getElementById('taskChoiceStep').style.display = 'block';
+      document.getElementById('individualTaskStep').style.display = 'none';
+      document.getElementById('multipleTasksStep').style.display = 'none';
+      document.getElementById('taskModalTitle').textContent = 'Create New Task';
+      
+      // Reset bulk upload states
+      const bulkInitialView = document.getElementById('bulkInitialView');
+      const bulkUploadStatus = document.getElementById('bulkUploadStatus');
+      const bulkSuccessView = document.getElementById('bulkSuccessView');
+      const bulkPreviewSection = document.getElementById('bulkPreviewSection');
+      const bulkTaskFile = document.getElementById('bulkTaskFile');
+      
+      if (bulkInitialView) bulkInitialView.style.display = 'block';
+      if (bulkUploadStatus) bulkUploadStatus.style.display = 'none';
+      if (bulkSuccessView) bulkSuccessView.style.display = 'none';
+      if (bulkPreviewSection) bulkPreviewSection.style.display = 'none';
+      if (bulkTaskFile) bulkTaskFile.value = '';
+      
+      bulkTaskData = [];
     }
 
     function closeTaskCreator() {
       document.getElementById('taskCreatorModal').classList.remove('active');
-      document.getElementById('taskForm').reset();
-      document.getElementById('bulkPreview').style.display = 'none';
-      bulkTaskData = [];
+      setTimeout(resetTaskCreator, 300);
+    }
+
+    function backToChoice() {
+      resetTaskCreator();
+    }
+
+    function selectIndividualTask() {
+      document.getElementById('taskChoiceStep').style.display = 'none';
+      document.getElementById('individualTaskStep').style.display = 'block';
+      document.getElementById('multipleTasksStep').style.display = 'none';
+      document.getElementById('taskModalTitle').textContent = 'Create Individual Task';
+      document.getElementById('taskDate').valueAsDate = new Date();
+    }
+
+    function selectMultipleTasks() {
+      document.getElementById('taskChoiceStep').style.display = 'none';
+      document.getElementById('individualTaskStep').style.display = 'none';
+      document.getElementById('multipleTasksStep').style.display = 'block';
+      document.getElementById('taskModalTitle').textContent = 'Upload Multiple Tasks';
+      
+      // Auto-download template
+      downloadBulkTemplate();
     }
 
     function toggleFeaturesInput() {
@@ -1437,7 +1543,6 @@
       if (!hasFeatures) document.getElementById('taskFeaturesText').value = '';
     }
 
-    // FIXED: Proper error handling and success feedback
     async function submitTask(e) {
       e.preventDefault();
 
@@ -1479,7 +1584,6 @@
       return (artno + '-' + color + '-' + gender + '-' + size + '-1').replace(/\s+/g, ' ');
     }
 
-    // FIXED: JSONP implementation for creating tasks
     async function submitTaskToSheet(taskData) {
       return new Promise((resolve, reject) => {
         const callbackName = 'createTaskCallback_' + Date.now();
@@ -1551,7 +1655,7 @@
       showToast('Template downloaded!', 'success');
     }
 
-    function handleBulkTaskUpload(event) {
+    function handleBulkTaskUploadNew(event) {
       const file = event.target.files[0];
       if (!file) return;
 
@@ -1566,47 +1670,72 @@
           const values = lines[i].split(',').map(v => v.trim());
           const row = {};
           headers.forEach((h, idx) => {
-            row[h.toLowerCase().replace(/-/g, '').replace(/\s+/g, '')] = values[idx] || '';
+            const key = h.toLowerCase().replace(/-/g, '').replace(/\s+/g, '');
+            row[key] = values[idx] || '';
           });
           bulkTaskData.push(row);
         }
 
-        showBulkPreview(headers, bulkTaskData);
+        if (bulkTaskData.length === 0) {
+          showToast('No data found in CSV', 'error');
+          return;
+        }
+
+        showBulkPreviewNew(headers, bulkTaskData);
       };
       reader.readAsText(file);
-      event.target.value = '';
     }
 
-    function showBulkPreview(headers, data) {
-      const previewDiv = document.getElementById('bulkPreview');
+    function showBulkPreviewNew(headers, data) {
+      const bulkInitialView = document.getElementById('bulkInitialView');
+      const bulkPreviewSection = document.getElementById('bulkPreviewSection');
+      
+      if (bulkInitialView) bulkInitialView.style.display = 'none';
+      if (bulkPreviewSection) bulkPreviewSection.style.display = 'block';
+      
       const headerRow = document.getElementById('bulkPreviewHeader');
       const bodyRow = document.getElementById('bulkPreviewBody');
 
-      headerRow.innerHTML = headers.map(h => '<th>' + h + '</th>').join('');
-      bodyRow.innerHTML = data.slice(0, 5).map(row => {
-        return '<tr>' + headers.map(h => {
-          const key = h.toLowerCase().replace(/-/g, '').replace(/\s+/g, '');
-          return '<td>' + (row[key] || '-') + '</td>';
-        }).join('') + '</tr>';
-      }).join('');
+      if (headerRow) headerRow.innerHTML = headers.map(h => '<th>' + h + '</th>').join('');
+      if (bodyRow) {
+        bodyRow.innerHTML = data.slice(0, 5).map(row => {
+          return '<tr>' + headers.map(h => {
+            const key = h.toLowerCase().replace(/-/g, '').replace(/\s+/g, '');
+            return '<td>' + (row[key] || '-') + '</td>';
+          }).join('') + '</tr>';
+        }).join('');
 
-      if (data.length > 5) {
-        bodyRow.innerHTML += '<tr><td colspan="' + headers.length + '" style="text-align: center; color: var(--gray-500);">... and ' + (data.length - 5) + ' more rows</td></tr>';
+        if (data.length > 5) {
+          bodyRow.innerHTML += '<tr><td colspan="' + headers.length + '" style="text-align: center; color: var(--gray-500);">... and ' + (data.length - 5) + ' more rows</td></tr>';
+        }
       }
-
-      previewDiv.style.display = 'block';
     }
 
-    async function submitBulkTasks() {
+    async function submitBulkTasksNew() {
       if (bulkTaskData.length === 0) {
         showToast('No data to upload', 'error');
         return;
       }
 
+      // Show uploading status
+      const bulkPreviewSection = document.getElementById('bulkPreviewSection');
+      const bulkUploadStatus = document.getElementById('bulkUploadStatus');
+      
+      if (bulkPreviewSection) bulkPreviewSection.style.display = 'none';
+      if (bulkUploadStatus) bulkUploadStatus.style.display = 'block';
+      
       let successCount = 0;
       let errorCount = 0;
       
-      for (const row of bulkTaskData) {
+      for (let i = 0; i < bulkTaskData.length; i++) {
+        const row = bulkTaskData[i];
+        
+        // Update progress
+        const uploadProgressText = document.getElementById('uploadProgressText');
+        if (uploadProgressText) {
+          uploadProgressText.textContent = `Processing row ${i + 1} of ${bulkTaskData.length}`;
+        }
+        
         try {
           const taskData = {
             date: row.date || new Date().toISOString().split('T')[0],
@@ -1627,30 +1756,295 @@
 
           await submitTaskToSheet(taskData);
           successCount++;
-          await new Promise(r => setTimeout(r, 100));
         } catch (err) {
           console.error('Failed to create task:', err);
           errorCount++;
         }
+        
+        // Small delay to show progress
+        await new Promise(r => setTimeout(r, 100));
       }
 
-      showToast(`Bulk upload complete: ${successCount} success, ${errorCount} failed`, successCount > 0 ? 'success' : 'error');
+      // Show success
+      if (bulkUploadStatus) bulkUploadStatus.style.display = 'none';
+      const bulkSuccessView = document.getElementById('bulkSuccessView');
+      if (bulkSuccessView) bulkSuccessView.style.display = 'block';
       
-      if (successCount > 0) {
-        closeTaskCreator();
-        refreshData();
+      const successMessage = document.getElementById('successMessage');
+      if (successMessage) {
+        successMessage.textContent = `${successCount} tasks created successfully${errorCount > 0 ? ` (${errorCount} failed)` : ''}`;
       }
+      
+      showToast(`Bulk upload complete: ${successCount} success${errorCount > 0 ? ', ' + errorCount + ' failed' : ''}`, 
+        errorCount === 0 ? 'success' : 'error');
+      
+      // Refresh data and close modal after delay
+      setTimeout(() => {
+        refreshData();
+        closeTaskCreator();
+      }, 2000);
+    }
+
+    // ============================================
+    // EXPORT OPTIONS (CSV + EMAIL)
+    // ============================================
+
+    let currentExportData = [];
+    let currentExportType = 'all';
+
+    function openExportModal(type) {
+      currentExportType = type;
+      
+      if (type === 'selected' && selectedRows.size === 0) {
+        showToast('No items selected', 'error');
+        return;
+      }
+      
+      // Get data to export
+      if (type === 'selected') {
+        currentExportData = allData.filter(item => selectedRows.has(item._rowIndex));
+      } else {
+        currentExportData = filteredData.length > 0 ? filteredData : allData;
+      }
+      
+      const exportCount = document.getElementById('exportCount');
+      if (exportCount) exportCount.textContent = currentExportData.length;
+      
+      document.getElementById('exportModal').classList.add('active');
+      
+      // Reset email form
+      const emailFormSection = document.getElementById('emailFormSection');
+      const emailSendingStatus = document.getElementById('emailSendingStatus');
+      const emailSuccessView = document.getElementById('emailSuccessView');
+      const exportEmailTo = document.getElementById('exportEmailTo');
+      const exportEmailMessage = document.getElementById('exportEmailMessage');
+      
+      if (emailFormSection) emailFormSection.style.display = 'none';
+      if (emailSendingStatus) emailSendingStatus.style.display = 'none';
+      if (emailSuccessView) emailSuccessView.style.display = 'none';
+      if (exportEmailTo) exportEmailTo.value = '';
+      if (exportEmailMessage) exportEmailMessage.value = '';
+    }
+
+    function closeExportModal() {
+      document.getElementById('exportModal').classList.remove('active');
+    }
+
+    function exportToCSV() {
+      if (!currentExportData.length) {
+        showToast('No data to export', 'error');
+        return;
+      }
+      
+      const headers = [
+        'Date', 'Person', 'Category', 'Art-Gen', 'Artno', 'Gender', 'Sub-Category',
+        'Color Code', 'Color', 'Size', 'Brand', 'MRP', 'File Name', 'Features',
+        'Studio Completion', 'Studio Status', 'Assigned Date', 'Designer',
+        'Designer Status', 'Approver Remarks', 'PMT Status', 'Design Completion',
+        'Sync Status', 'Days Pending', 'Issue Type', 'Remarks'
+      ];
+      
+      const rows = currentExportData.map(t => [
+        t.date, t.person, t.category, t.artGen, t.artno, t.gender, t.subCategory,
+        t.colorCode, t.color, t.size, t.brand, t.mrp, t.fileName, t.features,
+        t.studioCompletion, t.studioStatus, t.assignedDate, t.designer,
+        t.designerStatus, t.approverRemarks, t.pmtStatus, t.designCompletion,
+        t.syncStatus, t.daysPending, t.issueType, t.remarks
+      ]);
+      
+      const csv = [headers.join(','), ...rows.map(r => 
+        r.map(f => `"${(f || '').toString().replace(/"/g, '""')}"`).join(',')
+      )].join('\n');
+      
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentExportType}_tasks_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showToast(`Exported ${currentExportData.length} tasks!`, 'success');
+      closeExportModal();
+    }
+
+    function exportToEmail() {
+      const emailFormSection = document.getElementById('emailFormSection');
+      if (emailFormSection) emailFormSection.style.display = 'block';
+    }
+
+    async function sendExportEmail() {
+      const toEmail = document.getElementById('exportEmailTo').value.trim();
+      const subject = document.getElementById('exportEmailSubject').value;
+      const message = document.getElementById('exportEmailMessage').value;
+      
+      if (!toEmail) {
+        showToast('Please enter recipient email', 'error');
+        return;
+      }
+      
+      // Show sending status
+      const emailFormSection = document.getElementById('emailFormSection');
+      const emailSendingStatus = document.getElementById('emailSendingStatus');
+      
+      if (emailFormSection) emailFormSection.style.display = 'none';
+      if (emailSendingStatus) emailSendingStatus.style.display = 'block';
+      
+      try {
+        // Generate CSV content
+        const headers = [
+          'Date', 'Person', 'Category', 'Art-Gen', 'Artno', 'Gender', 'Sub-Category',
+          'Color Code', 'Color', 'Size', 'Brand', 'MRP', 'File Name', 'Features',
+          'Studio Completion', 'Studio Status', 'Assigned Date', 'Designer',
+          'Designer Status', 'Approver Remarks', 'PMT Status', 'Design Completion',
+          'Sync Status', 'Days Pending', 'Issue Type', 'Remarks'
+        ];
+        
+        const rows = currentExportData.map(t => [
+          t.date, t.person, t.category, t.artGen, t.artno, t.gender, t.subCategory,
+          t.colorCode, t.color, t.size, t.brand, t.mrp, t.fileName, t.features,
+          t.studioCompletion, t.studioStatus, t.assignedDate, t.designer,
+          t.designerStatus, t.approverRemarks, t.pmtStatus, t.designCompletion,
+          t.syncStatus, t.daysPending, t.issueType, t.remarks
+        ]);
+        
+        const csvContent = [headers.join(','), ...rows.map(r => 
+          r.map(f => `"${(f || '').toString().replace(/"/g, '""')}"`).join(',')
+        )].join('\n');
+        
+        // Generate overview stats
+        const stats = {
+          total: currentExportData.length,
+          completed: currentExportData.filter(t => t.designerStatus === 'Completed').length,
+          pending: currentExportData.filter(t => t.designerStatus === 'Pending').length,
+          urgent: currentExportData.filter(t => (t.approverRemarks || '').toLowerCase().includes('urgent')).length
+        };
+        
+        // Prepare email data for backend
+        const emailData = {
+          to: toEmail,
+          subject: subject,
+          message: message,
+          csvContent: csvContent,
+          stats: stats,
+          rowCount: currentExportData.length
+        };
+        
+        // Send to backend
+        await sendEmailViaBackend(emailData);
+        
+        // Show success
+        if (emailSendingStatus) emailSendingStatus.style.display = 'none';
+        const emailSuccessView = document.getElementById('emailSuccessView');
+        if (emailSuccessView) emailSuccessView.style.display = 'block';
+        
+        showToast('Email sent successfully!', 'success');
+        
+        setTimeout(() => {
+          closeExportModal();
+        }, 2000);
+        
+      } catch (err) {
+        if (emailSendingStatus) emailSendingStatus.style.display = 'none';
+        const emailFormSection = document.getElementById('emailFormSection');
+        if (emailFormSection) emailFormSection.style.display = 'block';
+        showToast('Failed to send email: ' + err.message, 'error');
+      }
+    }
+
+    // NEW: Backend email function
+    async function sendEmailViaBackend(emailData) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'emailCallback_' + Date.now();
+        const script = document.createElement('script');
+        
+        window[callbackName] = function(result) {
+          delete window[callbackName];
+          if (script.parentNode) document.head.removeChild(script);
+          
+          if (result && result.success) {
+            resolve(result);
+          } else {
+            reject(new Error(result?.error || 'Failed to send email'));
+          }
+        };
+        
+        const encodedData = encodeURIComponent(JSON.stringify(emailData));
+        const url = `${WEB_APP_URL}?action=sendEmail&data=${encodedData}&callback=${callbackName}&nocache=${Date.now()}`;
+        
+        script.src = url;
+        script.onerror = () => {
+          delete window[callbackName];
+          if (script.parentNode) document.head.removeChild(script);
+          reject(new Error('Network error - failed to send email'));
+        };
+        
+        document.head.appendChild(script);
+        
+        setTimeout(() => {
+          if (window[callbackName]) {
+            delete window[callbackName];
+            if (script.parentNode) document.head.removeChild(script);
+            reject(new Error('Request timeout'));
+          }
+        }, 30000);
+      });
+    }
+
+    // Update the old exportCSV function to use new modal
+    function exportCSV(type) {
+      openExportModal(type);
     }
   </script>
 
-  <!-- Task Creator Modal -->
-  <div class="modal-overlay" id="taskCreatorModal" onclick="if(event.target.id === 'taskCreatorModal') closeTaskCreator()">
-    <div class="modal" style="max-width: 900px;" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title">Create New Task</div>
-        <button class="modal-close" onclick="closeTaskCreator()" type="button">×</button>
+<!-- Task Creator Modal -->
+<div class="modal-overlay" id="taskCreatorModal" onclick="if(event.target.id === 'taskCreatorModal') closeTaskCreator()">
+  <div class="modal" style="max-width: 600px;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="taskModalTitle">Create New Task</div>
+      <button class="modal-close" onclick="closeTaskCreator()" type="button">×</button>
+    </div>
+    <div class="modal-body" id="taskModalBody">
+      
+      <!-- STEP 1: CHOICE SELECTION -->
+      <div id="taskChoiceStep">
+        <h3 style="text-align: center; margin-bottom: 24px; color: var(--gray-700);">Choose Task Creation Method</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+          <button type="button" class="btn btn-primary" onclick="selectIndividualTask()" style="flex-direction: column; padding: 40px 24px; height: auto;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 12px;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <div style="font-size: 18px; font-weight: 700;">Individual Task</div>
+            <div style="font-size: 13px; font-weight: 400; opacity: 0.9; margin-top: 8px;">Create single task with form</div>
+          </button>
+          
+          <button type="button" class="btn btn-success" onclick="selectMultipleTasks()" style="flex-direction: column; padding: 40px 24px; height: auto;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 12px;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <line x1="10" y1="9" x2="8" y2="9"></line>
+              <path d="M20 14l2-2-2-2"></path>
+              <path d="M24 12h-4"></path>
+            </svg>
+            <div style="font-size: 18px; font-weight: 700;">Multiple Tasks</div>
+            <div style="font-size: 13px; font-weight: 400; opacity: 0.9; margin-top: 8px;">Bulk upload via CSV</div>
+          </button>
+        </div>
       </div>
-      <div class="modal-body">
+
+      <!-- STEP 2A: INDIVIDUAL TASK FORM -->
+      <div id="individualTaskStep" style="display: none;">
+        <button type="button" class="btn btn-secondary" onclick="backToChoice()" style="margin-bottom: 16px;">
+          ← Back
+        </button>
         <form id="taskForm" onsubmit="submitTask(event)">
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
             <div class="form-group">
@@ -1689,7 +2083,7 @@
                 <option value="GENTS">GENTS</option>
                 <option value="LADIES">LADIES</option>
                 <option value="KIDS">KIDS</option>
-                </select>
+              </select>
             </div>
           </div>
 
@@ -1742,37 +2136,65 @@
             </div>
           </div>
 
-          <div style="display: flex; gap: 12px; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--gray-200);">
-            <div>
-              <button type="button" class="btn btn-secondary" onclick="downloadBulkTemplate()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Download Bulk Template
-              </button>
-              <div class="file-input-wrapper" style="margin-left: 8px; display: inline-block;">
-                <button type="button" class="btn btn-warning">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                  </svg>
-                  Upload Bulk CSV
-                </button>
-                <input type="file" class="file-input" id="bulkTaskFile" accept=".csv" onchange="handleBulkTaskUpload(event)">
-              </div>
-            </div>
-            <div style="display: flex; gap: 12px;">
-              <button type="button" class="btn btn-secondary" onclick="closeTaskCreator()">Cancel</button>
-              <button type="submit" class="btn btn-primary">Create Task</button>
-            </div>
+          <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--gray-200);">
+            <button type="button" class="btn btn-secondary" onclick="closeTaskCreator()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Task</button>
           </div>
         </form>
+      </div>
 
-        <div id="bulkPreview" style="margin-top: 20px; display: none;">
-          <h4 style="margin-bottom: 12px;">Bulk Upload Preview</h4>
+      <!-- STEP 2B: MULTIPLE TASKS UPLOAD -->
+      <div id="multipleTasksStep" style="display: none;">
+        <button type="button" class="btn btn-secondary" onclick="backToChoice()" style="margin-bottom: 16px;">
+          ← Back
+        </button>
+        
+        <div id="bulkInitialView">
+          <div style="text-align: center; padding: 20px;">
+            <div style="background: var(--success-light); color: var(--success); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </div>
+            <h4 style="margin-bottom: 8px;">Template Downloaded!</h4>
+            <p style="color: var(--gray-600); font-size: 14px; margin-bottom: 20px;">Fill in your tasks and upload the CSV file below</p>
+            
+            <div class="file-input-wrapper" style="display: inline-block;">
+              <button type="button" class="btn btn-primary" style="padding: 16px 32px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Upload CSV File
+              </button>
+              <input type="file" class="file-input" id="bulkTaskFile" accept=".csv" onchange="handleBulkTaskUploadNew(event)">
+            </div>
+          </div>
+        </div>
+
+        <!-- UPLOAD STATUS -->
+        <div id="bulkUploadStatus" style="display: none; text-align: center; padding: 40px;">
+          <div class="loading" style="width: 60px; height: 60px; border-width: 4px;"></div>
+          <h4 style="margin-top: 20px; color: var(--gray-700);">Uploading Tasks...</h4>
+          <p style="color: var(--gray-600); font-size: 14px; margin-top: 8px;" id="uploadProgressText">Processing row 1 of 10</p>
+        </div>
+
+        <!-- SUCCESS VIEW -->
+        <div id="bulkSuccessView" style="display: none; text-align: center; padding: 40px;">
+          <div style="background: var(--success-light); color: var(--success); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; animation: scaleIn 0.5s ease;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <h4 style="color: var(--success); margin-bottom: 8px;">Upload Successful!</h4>
+          <p style="color: var(--gray-600); font-size: 14px;" id="successMessage">10 tasks created successfully</p>
+        </div>
+
+        <div id="bulkPreviewSection" style="display: none; margin-top: 20px;">
+          <h4 style="margin-bottom: 12px;">Preview</h4>
           <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--gray-200); border-radius: 8px;">
             <table class="data-table" style="font-size: 12px;">
               <thead>
@@ -1781,10 +2203,94 @@
               <tbody id="bulkPreviewBody"></tbody>
             </table>
           </div>
-          <button type="button" class="btn btn-success" onclick="submitBulkTasks()" style="margin-top: 12px;">Submit All Tasks</button>
+          <button type="button" class="btn btn-success" onclick="submitBulkTasksNew()" style="margin-top: 12px; width: 100%;">
+            Confirm & Upload All Tasks
+          </button>
         </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Export Options Modal -->
+<div class="modal-overlay" id="exportModal" onclick="if(event.target.id === 'exportModal') closeExportModal()">
+  <div class="modal" style="max-width: 500px;" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">Export Options</div>
+      <button class="modal-close" onclick="closeExportModal()" type="button">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: var(--gray-600); margin-bottom: 20px; font-size: 14px;">Choose how you want to export <strong id="exportCount">0</strong> tasks:</p>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <button type="button" class="btn btn-primary" onclick="exportToCSV()" style="flex-direction: column; padding: 30px 20px; height: auto;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 12px;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <div style="font-size: 16px; font-weight: 700;">Download CSV</div>
+          <div style="font-size: 12px; font-weight: 400; opacity: 0.9; margin-top: 4px;">Save to device</div>
+        </button>
+        
+        <button type="button" class="btn btn-success" onclick="exportToEmail()" style="flex-direction: column; padding: 30px 20px; height: auto;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 12px;">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <div style="font-size: 16px; font-weight: 700;">Send Email</div>
+          <div style="font-size: 12px; font-weight: 400; opacity: 0.9; margin-top: 4px;">CSV + Overview</div>
+        </button>
+      </div>
+
+      <!-- Email Form -->
+      <div id="emailFormSection" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--gray-200);">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="detail-label">To Email *</label>
+          <input type="email" id="exportEmailTo" placeholder="recipient@example.com" required style="width: 100%; padding: 10px; border: 2px solid var(--gray-200); border-radius: 6px; font-size: 14px;">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="detail-label">Subject</label>
+          <input type="text" id="exportEmailSubject" value="Task Export Report" style="width: 100%; padding: 10px; border: 2px solid var(--gray-200); border-radius: 6px; font-size: 14px;">
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="detail-label">Additional Message</label>
+          <textarea id="exportEmailMessage" rows="3" placeholder="Optional message..." style="width: 100%; padding: 10px; border: 2px solid var(--gray-200); border-radius: 6px; font-size: 14px; resize: vertical;"></textarea>
+        </div>
+        <button type="button" class="btn btn-success" onclick="sendExportEmail()" style="width: 100%;">
+          Send Email with CSV
+        </button>
+      </div>
+
+      <!-- Email Sending Status -->
+      <div id="emailSendingStatus" style="display: none; text-align: center; padding: 20px;">
+        <div class="loading" style="width: 40px; height: 40px; margin: 0 auto;"></div>
+        <p style="margin-top: 12px; color: var(--gray-600);">Sending email...</p>
+      </div>
+
+      <!-- Email Success -->
+      <div id="emailSuccessView" style="display: none; text-align: center; padding: 20px;">
+        <div style="background: var(--success-light); color: var(--success); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h4 style="color: var(--success);">Email Sent!</h4>
+        <p style="color: var(--gray-600); font-size: 14px;">Check your inbox for the report</p>
       </div>
     </div>
   </div>
-</body>
+</div>
+
+<style>
+@keyframes scaleIn {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+</style></body>
 </html>
+
