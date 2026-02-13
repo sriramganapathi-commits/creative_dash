@@ -389,21 +389,7 @@
     .toast.error { background: var(--danger); }
     
     .hidden { display: none !important; }
-    
-    /* Debug panel */
-    .debug-panel {
-      background: var(--gray-900);
-      color: #00ff00;
-      padding: 12px;
-      font-family: monospace;
-      font-size: 12px;
-      max-height: 200px;
-      overflow-y: auto;
-      margin: 12px 0;
-      border-radius: 8px;
-      display: none;
-    }
-    .debug-panel.show { display: block; }
+   }
     
     @media (max-width: 768px) {
       .stats-grid, .analytics-grid { grid-template-columns: repeat(2, 1fr); }
@@ -455,9 +441,6 @@
     </div>
   </header>
 
-  <main class="main-container">
-    <!-- Debug Panel (hidden by default) -->
-    <div class="debug-panel" id="debugPanel"></div>
     
     <!-- View Switcher Tabs -->
     <div class="view-tabs">
@@ -701,19 +684,7 @@
     let currentView = 'main';
     let analyticsFilter = { status: 'all', category: null };
 
-    // Debug logging
-    function debug(msg) {
-      console.log(msg);
-      const panel = document.getElementById('debugPanel');
-      panel.innerHTML += msg + '<br>';
-      panel.classList.add('show');
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      debug('Page loaded, connecting...');
-      connect();
-    });
-
+  
     function switchView(view) {
       currentView = view;
       document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
@@ -750,11 +721,11 @@
         isConnected = true;
         setStatus('connected', 'Connected (' + allData.length + ' rows)');
         showToast('Connected successfully!', 'success');
-        debug('✅ Connected! Loaded ' + allData.length + ' rows');
+    
       } catch (err) {
         setStatus('error', 'Connection Failed');
         showToast('Failed: ' + err.message, 'error');
-        debug('❌ Error: ' + err.message);
+   
         document.getElementById('emptyState').innerHTML = 
           '<h3>Connection Failed</h3><p>' + err.message + '</p><p style="font-size:12px;color:var(--gray-400);">Check console for details</p>';
       }
@@ -762,8 +733,7 @@
 
     async function loadAllData() {
       const url = WEB_APP_URL + '?action=data&nocache=' + Date.now();
-      debug('Fetching: ' + url);
-      
+    
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
       
@@ -777,14 +747,13 @@
         });
         
         clearTimeout(timeoutId);
-        debug('Response status: ' + response.status);
-        
+       
         if (!response.ok) {
           throw new Error('HTTP ' + response.status + ': ' + response.statusText);
         }
         
         const result = await response.json();
-        debug('Response received, success: ' + result.success);
+     
         
         if (!result.success) {
           throw new Error(result.error || 'Unknown error from server');
@@ -799,7 +768,7 @@
           (row.artGen && row.artGen.trim() !== '')
         );
         
-        debug('Filtered to ' + allData.length + ' valid rows');
+  
         
         // Create unique key for each row to distinguish variants
         allData.forEach(item => {
@@ -1769,4 +1738,5 @@
   </div>
 </body>
 </html>
+
 
