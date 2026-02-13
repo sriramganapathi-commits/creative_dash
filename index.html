@@ -1875,7 +1875,7 @@
       if (emailFormSection) emailFormSection.style.display = 'block';
     }
 
-    async function sendExportEmail() {
+   async function sendExportEmail() {
   const toEmail = document.getElementById('exportEmailTo').value.trim();
   const subject = document.getElementById('exportEmailSubject').value;
   const message = document.getElementById('exportEmailMessage').value;
@@ -1904,21 +1904,15 @@
   if (emailSendingStatus) emailSendingStatus.style.display = 'block';
   
   try {
-    // Generate CSV content
+    // Generate CSV content - use fewer columns to reduce size
     const headers = [
-      'Date', 'Person', 'Category', 'Art-Gen', 'Artno', 'Gender', 'Sub-Category',
-      'Color Code', 'Color', 'Size', 'Brand', 'MRP', 'File Name', 'Features',
-      'Studio Completion', 'Studio Status', 'Assigned Date', 'Designer',
-      'Designer Status', 'Approver Remarks', 'PMT Status', 'Design Completion',
-      'Sync Status', 'Days Pending', 'Issue Type', 'Remarks'
+      'Date', 'Person', 'Category', 'Artno', 'Gender', 'Color',
+      'Designer', 'Designer Status', 'PMT Status', 'Studio Completion'
     ];
     
     const rows = currentExportData.map(t => [
-      t.date, t.person, t.category, t.artGen, t.artno, t.gender, t.subCategory,
-      t.colorCode, t.color, t.size, t.brand, t.mrp, t.fileName, t.features,
-      t.studioCompletion, t.studioStatus, t.assignedDate, t.designer,
-      t.designerStatus, t.approverRemarks, t.pmtStatus, t.designCompletion,
-      t.syncStatus, t.daysPending, t.issueType, t.remarks
+      t.date, t.person, t.category, t.artno, t.gender, t.color,
+      t.designer, t.designerStatus, t.pmtStatus, t.studioCompletion
     ]);
     
     const csvContent = [headers.join(','), ...rows.map(r => 
@@ -1926,10 +1920,11 @@
     )].join('\n');
     
     console.log("CSV Content length:", csvContent.length);
+    console.log("Number of rows:", currentExportData.length);
     
-    // Check if data is too large
-    if (csvContent.length > 50000) { // ~50KB limit for safety
-      throw new Error('Dataset too large for email. Please use CSV download or filter to fewer rows (max ~500 rows).');
+    // More conservative limit - 15KB to stay well under URL limits
+    if (csvContent.length > 15000) {
+      throw new Error(`Dataset too large (${csvContent.length} chars). Maximum allowed is 15,000 characters (~100-150 rows). You have ${currentExportData.length} rows. Please filter to fewer rows or use CSV download.`);
     }
     
     // Generate overview stats
@@ -1980,6 +1975,10 @@
 // EMAIL BACKEND - WITH DEBUGGING
 // ============================================
 
+// ============================================
+// EMAIL BACKEND - WITH DEBUGGING
+// ============================================
+
 async function sendEmailViaBackend(emailData) {
   return new Promise((resolve, reject) => {
     console.log("=== SENDING EMAIL ===");
@@ -1988,12 +1987,16 @@ async function sendEmailViaBackend(emailData) {
     const callbackName = 'emailCallback_' + Date.now();
     const script = document.createElement('script');
     
-    // Check data size - if too large, we have a problem with GET requests
+    // Check data size
     const dataString = JSON.stringify(emailData);
     console.log("Data size:", dataString.length, "characters");
     
-    if (dataString.length > 1500) {
-      console.warn("WARNING: Data is large, may exceed URL limit");
+    // Google Apps Script has a ~2000 char limit for URL parameters in practice
+    // But we can handle up to ~7000 in the URL itself
+    // The real limit is the Apps Script execution limit for GET parameters
+    if (dataString.length > 100000) { // 100KB raw data is way too much
+      reject(new Error('Data too large. Maximum allowed is ~100KB. Please select fewer rows.'));
+      return;
     }
     
     window[callbackName] = function(result) {
@@ -2008,7 +2011,7 @@ async function sendEmailViaBackend(emailData) {
       }
     };
     
-    // Encode the data
+    // Encode the data - use encodeURIComponent for proper encoding
     let encodedData;
     try {
       encodedData = encodeURIComponent(dataString);
@@ -2023,10 +2026,11 @@ async function sendEmailViaBackend(emailData) {
     const url = `${WEB_APP_URL}?action=sendEmail&data=${encodedData}&callback=${callbackName}&nocache=${Date.now()}`;
     console.log("URL length:", url.length);
     
-    // Check URL length - browser limit is around 8000 chars, but safe limit is 2000
-    if (url.length > 7000) {
+    // Check URL length - browser limit varies but 8000 is safe
+    // However, Apps Script might have lower limits for parameter parsing
+    if (url.length > 8000) {
       console.error("URL too long:", url.length);
-      reject(new Error('Data too large for GET request. Please export fewer rows or use CSV download.'));
+      reject(new Error('Data too large for email. The URL exceeds 8000 characters. Please export fewer rows (try max 50-100 rows) or use CSV download.'));
       return;
     }
     
@@ -2036,31 +2040,35 @@ async function sendEmailViaBackend(emailData) {
       console.error("Script load error:", e);
       delete window[callbackName];
       if (script.parentNode) document.head.removeChild(script);
-      reject(new Error('Network error - failed to connect to server. Check if URL is accessible.'));
+      reject(new Error('Network error - failed to connect to server. Please check your internet connection.'));
     };
     
     script.onload = () => {
-      console.log("Script loaded successfully");
+      console.log("Script loaded successfully, waiting for callback...");
     };
     
     document.head.appendChild(script);
-    console.log("Script appended to head");
+    console.log("Script appended to head, src:", script.src.substring(0, 200) + "...");
     
-    // Timeout
+    // Timeout - increased to 45 seconds for email sending
     setTimeout(() => {
       if (window[callbackName]) {
-        console.error("Request timeout");
+        console.error("Request timeout - callback never fired");
         delete window[callbackName];
         if (script.parentNode) document.head.removeChild(script);
-        reject(new Error('Request timeout - server did not respond'));
+        reject(new Error('Request timeout - server took too long to respond. Email might have been sent. Please check your inbox before retrying.'));
       }
-    }, 30000);
+    }, 45000);
   });
-}
-    // Update the old exportCSV function to use new modal
+}    // Update the old exportCSV function to use new modal
     function exportCSV(type) {
       openExportModal(type);
     }
+function changePage(page) {
+  currentPage = page;
+  renderTable();
+  document.getElementById('tableWrapper').scrollTop = 0;
+}
   </script>
 
 <!-- Task Creator Modal -->
