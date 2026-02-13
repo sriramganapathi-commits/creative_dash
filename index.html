@@ -1876,123 +1876,187 @@
     }
 
     async function sendExportEmail() {
-      const toEmail = document.getElementById('exportEmailTo').value.trim();
-      const subject = document.getElementById('exportEmailSubject').value;
-      const message = document.getElementById('exportEmailMessage').value;
-      
-      if (!toEmail) {
-        showToast('Please enter recipient email', 'error');
-        return;
-      }
-      
-      // Show sending status
-      const emailFormSection = document.getElementById('emailFormSection');
-      const emailSendingStatus = document.getElementById('emailSendingStatus');
-      
-      if (emailFormSection) emailFormSection.style.display = 'none';
-      if (emailSendingStatus) emailSendingStatus.style.display = 'block';
-      
-      try {
-        // Generate CSV content
-        const headers = [
-          'Date', 'Person', 'Category', 'Art-Gen', 'Artno', 'Gender', 'Sub-Category',
-          'Color Code', 'Color', 'Size', 'Brand', 'MRP', 'File Name', 'Features',
-          'Studio Completion', 'Studio Status', 'Assigned Date', 'Designer',
-          'Designer Status', 'Approver Remarks', 'PMT Status', 'Design Completion',
-          'Sync Status', 'Days Pending', 'Issue Type', 'Remarks'
-        ];
-        
-        const rows = currentExportData.map(t => [
-          t.date, t.person, t.category, t.artGen, t.artno, t.gender, t.subCategory,
-          t.colorCode, t.color, t.size, t.brand, t.mrp, t.fileName, t.features,
-          t.studioCompletion, t.studioStatus, t.assignedDate, t.designer,
-          t.designerStatus, t.approverRemarks, t.pmtStatus, t.designCompletion,
-          t.syncStatus, t.daysPending, t.issueType, t.remarks
-        ]);
-        
-        const csvContent = [headers.join(','), ...rows.map(r => 
-          r.map(f => `"${(f || '').toString().replace(/"/g, '""')}"`).join(',')
-        )].join('\n');
-        
-        // Generate overview stats
-        const stats = {
-          total: currentExportData.length,
-          completed: currentExportData.filter(t => t.designerStatus === 'Completed').length,
-          pending: currentExportData.filter(t => t.designerStatus === 'Pending').length,
-          urgent: currentExportData.filter(t => (t.approverRemarks || '').toLowerCase().includes('urgent')).length
-        };
-        
-        // Prepare email data for backend
-        const emailData = {
-          to: toEmail,
-          subject: subject,
-          message: message,
-          csvContent: csvContent,
-          stats: stats,
-          rowCount: currentExportData.length
-        };
-        
-        // Send to backend
-        await sendEmailViaBackend(emailData);
-        
-        // Show success
-        if (emailSendingStatus) emailSendingStatus.style.display = 'none';
-        const emailSuccessView = document.getElementById('emailSuccessView');
-        if (emailSuccessView) emailSuccessView.style.display = 'block';
-        
-        showToast('Email sent successfully!', 'success');
-        
-        setTimeout(() => {
-          closeExportModal();
-        }, 2000);
-        
-      } catch (err) {
-        if (emailSendingStatus) emailSendingStatus.style.display = 'none';
-        const emailFormSection = document.getElementById('emailFormSection');
-        if (emailFormSection) emailFormSection.style.display = 'block';
-        showToast('Failed to send email: ' + err.message, 'error');
-      }
+  const toEmail = document.getElementById('exportEmailTo').value.trim();
+  const subject = document.getElementById('exportEmailSubject').value;
+  const message = document.getElementById('exportEmailMessage').value;
+  
+  console.log("Export Email - To:", toEmail);
+  console.log("Export Email - Subject:", subject);
+  console.log("Export Email - Data count:", currentExportData.length);
+  
+  if (!toEmail) {
+    showToast('Please enter recipient email', 'error');
+    return;
+  }
+  
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(toEmail)) {
+    showToast('Please enter a valid email address', 'error');
+    return;
+  }
+  
+  // Show sending status
+  const emailFormSection = document.getElementById('emailFormSection');
+  const emailSendingStatus = document.getElementById('emailSendingStatus');
+  
+  if (emailFormSection) emailFormSection.style.display = 'none';
+  if (emailSendingStatus) emailSendingStatus.style.display = 'block';
+  
+  try {
+    // Generate CSV content
+    const headers = [
+      'Date', 'Person', 'Category', 'Art-Gen', 'Artno', 'Gender', 'Sub-Category',
+      'Color Code', 'Color', 'Size', 'Brand', 'MRP', 'File Name', 'Features',
+      'Studio Completion', 'Studio Status', 'Assigned Date', 'Designer',
+      'Designer Status', 'Approver Remarks', 'PMT Status', 'Design Completion',
+      'Sync Status', 'Days Pending', 'Issue Type', 'Remarks'
+    ];
+    
+    const rows = currentExportData.map(t => [
+      t.date, t.person, t.category, t.artGen, t.artno, t.gender, t.subCategory,
+      t.colorCode, t.color, t.size, t.brand, t.mrp, t.fileName, t.features,
+      t.studioCompletion, t.studioStatus, t.assignedDate, t.designer,
+      t.designerStatus, t.approverRemarks, t.pmtStatus, t.designCompletion,
+      t.syncStatus, t.daysPending, t.issueType, t.remarks
+    ]);
+    
+    const csvContent = [headers.join(','), ...rows.map(r => 
+      r.map(f => `"${(f || '').toString().replace(/"/g, '""')}"`).join(',')
+    )].join('\n');
+    
+    console.log("CSV Content length:", csvContent.length);
+    
+    // Check if data is too large
+    if (csvContent.length > 50000) { // ~50KB limit for safety
+      throw new Error('Dataset too large for email. Please use CSV download or filter to fewer rows (max ~500 rows).');
     }
+    
+    // Generate overview stats
+    const stats = {
+      total: currentExportData.length,
+      completed: currentExportData.filter(t => t.designerStatus === 'Completed').length,
+      pending: currentExportData.filter(t => t.designerStatus === 'Pending').length,
+      urgent: currentExportData.filter(t => (t.approverRemarks || '').toLowerCase().includes('urgent')).length
+    };
+    
+    // Prepare email data for backend
+    const emailData = {
+      to: toEmail,
+      subject: subject,
+      message: message,
+      csvContent: csvContent,
+      stats: stats,
+      rowCount: currentExportData.length
+    };
+    
+    console.log("Sending to backend...");
+    
+    // Send to backend
+    const result = await sendEmailViaBackend(emailData);
+    console.log("Backend result:", result);
+    
+    // Show success
+    if (emailSendingStatus) emailSendingStatus.style.display = 'none';
+    const emailSuccessView = document.getElementById('emailSuccessView');
+    if (emailSuccessView) emailSuccessView.style.display = 'block';
+    
+    showToast('Email sent successfully!', 'success');
+    
+    setTimeout(() => {
+      closeExportModal();
+    }, 2000);
+    
+  } catch (err) {
+    console.error("Export email error:", err);
+    if (emailSendingStatus) emailSendingStatus.style.display = 'none';
+    const emailFormSection = document.getElementById('emailFormSection');
+    if (emailFormSection) emailFormSection.style.display = 'block';
+    showToast('Failed to send email: ' + err.message, 'error');
+  }
+}
 
-    // NEW: Backend email function
-    async function sendEmailViaBackend(emailData) {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'emailCallback_' + Date.now();
-        const script = document.createElement('script');
-        
-        window[callbackName] = function(result) {
-          delete window[callbackName];
-          if (script.parentNode) document.head.removeChild(script);
-          
-          if (result && result.success) {
-            resolve(result);
-          } else {
-            reject(new Error(result?.error || 'Failed to send email'));
-          }
-        };
-        
-        const encodedData = encodeURIComponent(JSON.stringify(emailData));
-        const url = `${WEB_APP_URL}?action=sendEmail&data=${encodedData}&callback=${callbackName}&nocache=${Date.now()}`;
-        
-        script.src = url;
-        script.onerror = () => {
-          delete window[callbackName];
-          if (script.parentNode) document.head.removeChild(script);
-          reject(new Error('Network error - failed to send email'));
-        };
-        
-        document.head.appendChild(script);
-        
-        setTimeout(() => {
-          if (window[callbackName]) {
-            delete window[callbackName];
-            if (script.parentNode) document.head.removeChild(script);
-            reject(new Error('Request timeout'));
-          }
-        }, 30000);
-      });
+  // ============================================
+// EMAIL BACKEND - WITH DEBUGGING
+// ============================================
+
+async function sendEmailViaBackend(emailData) {
+  return new Promise((resolve, reject) => {
+    console.log("=== SENDING EMAIL ===");
+    console.log("Email data:", emailData);
+    
+    const callbackName = 'emailCallback_' + Date.now();
+    const script = document.createElement('script');
+    
+    // Check data size - if too large, we have a problem with GET requests
+    const dataString = JSON.stringify(emailData);
+    console.log("Data size:", dataString.length, "characters");
+    
+    if (dataString.length > 1500) {
+      console.warn("WARNING: Data is large, may exceed URL limit");
     }
-
+    
+    window[callbackName] = function(result) {
+      console.log("Callback received:", result);
+      delete window[callbackName];
+      if (script.parentNode) document.head.removeChild(script);
+      
+      if (result && result.success) {
+        resolve(result);
+      } else {
+        reject(new Error(result?.error || 'Failed to send email'));
+      }
+    };
+    
+    // Encode the data
+    let encodedData;
+    try {
+      encodedData = encodeURIComponent(dataString);
+      console.log("Encoded data length:", encodedData.length);
+    } catch (e) {
+      console.error("Encoding error:", e);
+      reject(new Error('Failed to encode email data'));
+      return;
+    }
+    
+    // Build URL
+    const url = `${WEB_APP_URL}?action=sendEmail&data=${encodedData}&callback=${callbackName}&nocache=${Date.now()}`;
+    console.log("URL length:", url.length);
+    
+    // Check URL length - browser limit is around 8000 chars, but safe limit is 2000
+    if (url.length > 7000) {
+      console.error("URL too long:", url.length);
+      reject(new Error('Data too large for GET request. Please export fewer rows or use CSV download.'));
+      return;
+    }
+    
+    script.src = url;
+    
+    script.onerror = (e) => {
+      console.error("Script load error:", e);
+      delete window[callbackName];
+      if (script.parentNode) document.head.removeChild(script);
+      reject(new Error('Network error - failed to connect to server. Check if URL is accessible.'));
+    };
+    
+    script.onload = () => {
+      console.log("Script loaded successfully");
+    };
+    
+    document.head.appendChild(script);
+    console.log("Script appended to head");
+    
+    // Timeout
+    setTimeout(() => {
+      if (window[callbackName]) {
+        console.error("Request timeout");
+        delete window[callbackName];
+        if (script.parentNode) document.head.removeChild(script);
+        reject(new Error('Request timeout - server did not respond'));
+      }
+    }, 30000);
+  });
+}
     // Update the old exportCSV function to use new modal
     function exportCSV(type) {
       openExportModal(type);
